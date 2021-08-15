@@ -8,7 +8,7 @@ import (
 // Routes return http.Handler for http server
 // should be called after all custum path handler
 // be registed
-func (r *Router) Routes() http.Handler {
+func (r *Router) Routes(middlewares ...func(http.Handler) http.Handler) http.Handler {
 	r.router.NotFound = &NotFountResponse
 	notAllow := func(w http.ResponseWriter, r *http.Request) {
 		MethodNotAllowResponse(r.Method).ServeHTTP(w, r)
@@ -26,10 +26,16 @@ func (r *Router) Routes() http.Handler {
 			"/debug/vars",
 			expvar.Handler())
 	}
-	rlMiddle := r.rateLimit(r.router)
-	corsMiddle := r.enabledCORS(rlMiddle)
-	recoverMiddle := recoverPanic(corsMiddle)
-	return r.metrics(recoverMiddle)
+	mds := append(middlewares,
+		r.rateLimit,
+		r.enabledCORS,
+		recoverPanic,
+		r.metrics)
+	h := http.Handler(r.router)
+	for _, m := range mds {
+		h = m(h)
+	}
+	return h
 }
 
 // NewPath handle new http request
