@@ -7,7 +7,7 @@ import (
 
 // ErrResponse handle err respose
 func ErrResponse(w http.ResponseWriter, r *http.Request, status int, msg interface{}) {
-	data := envelope{"error": msg}
+	data := Envelope{"error": msg}
 	WriteJSON(w, status, data, nil)
 }
 

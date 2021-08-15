@@ -13,7 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type envelope map[string]interface{}
+type Envelope map[string]interface{}
 
 const maxBytes = 8 * 1_048_576 // 8MB for max readJSON body
 
@@ -27,10 +27,10 @@ func ReadIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func WriteJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) {
+func WriteJSON(w http.ResponseWriter, status int, data Envelope, headers http.Header) {
 	js, err := json.Marshal(data)
 	if err != nil {
-		msg := envelope{"error": err}
+		msg := Envelope{"error": err}
 		WriteJSON(w, http.StatusInternalServerError, msg, nil)
 		return
 	}
