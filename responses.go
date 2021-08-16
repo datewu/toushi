@@ -60,6 +60,10 @@ var NotPermittedResponse = errResponse{
 	code: http.StatusForbidden,
 }
 
+func notAllow(w http.ResponseWriter, r *http.Request) {
+	MethodNotAllowResponse(r.Method).ServeHTTP(w, r)
+}
+
 func MethodNotAllowResponse(method string) http.Handler {
 	return &errResponse{
 		msg:  fmt.Sprintf("the %s mehtod is not supported for this resource", method),

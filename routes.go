@@ -1,7 +1,6 @@
 package toushi
 
 import (
-	"expvar"
 	"net/http"
 )
 
@@ -10,29 +9,12 @@ import (
 // be registed
 func (r *Router) Routes(middlewares ...func(http.Handler) http.Handler) http.Handler {
 	r.router.NotFound = &NotFountResponse
-	notAllow := func(w http.ResponseWriter, r *http.Request) {
-		MethodNotAllowResponse(r.Method).ServeHTTP(w, r)
-	}
 	r.router.MethodNotAllowed = http.HandlerFunc(notAllow)
+	r.Get("/v1/healthcheck", healthCheckHandler)
 
-	r.router.HandlerFunc(
-		http.MethodGet,
-		"/v1/healthcheck",
-		healthCheckHandler)
-
-	if r.config.Metrics {
-		r.router.Handler(
-			http.MethodGet,
-			"/debug/vars",
-			expvar.Handler())
-	}
-	mds := append(middlewares,
-		r.rateLimit,
-		r.enabledCORS,
-		recoverPanic,
-		r.metrics)
+	middlewares = append(middlewares, r.buildIns()...)
 	h := http.Handler(r.router)
-	for _, m := range mds {
+	for _, m := range middlewares {
 		h = m(h)
 	}
 	return h

@@ -10,10 +10,24 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func (ro *Router) enabledCORS(next http.Handler) http.Handler {
-	if ro.config.CORS.TrustedOrigins == nil {
-		return next
+func (r *Router) buildIns() []func(http.Handler) http.Handler {
+	ms := []func(http.Handler) http.Handler{}
+	// note the order is siginificant
+	if r.config.Limiter.Enabled {
+		ms = append(ms, r.rateLimit)
 	}
+	if r.config.CORS.TrustedOrigins != nil {
+		ms = append(ms, r.enabledCORS)
+	}
+	ms = append(ms, recoverPanic)
+	if r.config.Metrics {
+		r.router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
+		ms = append(ms, r.metrics)
+	}
+	return ms
+}
+
+func (ro *Router) enabledCORS(next http.Handler) http.Handler {
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
 
@@ -49,9 +63,6 @@ func (ro *Router) enabledCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(middle)
 }
 func (ro *Router) rateLimit(next http.Handler) http.Handler {
-	if !ro.config.Limiter.Enabled {
-		return next
-	}
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -100,9 +111,6 @@ func (ro *Router) rateLimit(next http.Handler) http.Handler {
 }
 
 func (ro *Router) metrics(next http.Handler) http.Handler {
-	if !ro.config.Metrics {
-		return next
-	}
 	totalRequestReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSend := expvar.NewInt("total_responses_send")
 	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_us")
