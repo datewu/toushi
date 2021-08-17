@@ -9,7 +9,7 @@ import (
 // be registed
 func (r *Router) Routes(middlewares ...func(http.Handler) http.Handler) http.Handler {
 	r.router.NotFound = &NotFountResponse
-	r.router.MethodNotAllowed = http.HandlerFunc(notAllow)
+	r.router.MethodNotAllowed = MethodNotAllowResponse
 	r.Get("/v1/healthcheck", healthCheckHandler)
 
 	middlewares = append(middlewares, r.buildIns()...)
