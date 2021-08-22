@@ -5,6 +5,11 @@ import (
 	"net/http"
 )
 
+// OKJSON handle 200 respose
+func OKJSON(w http.ResponseWriter, r *http.Request, data Envelope) {
+	WriteJSON(w, http.StatusOK, data, nil)
+}
+
 // ErrResponse handle err respose
 func ErrResponse(w http.ResponseWriter, r *http.Request, status int, msg interface{}) {
 	data := Envelope{"error": msg}

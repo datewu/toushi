@@ -17,6 +17,11 @@ type Envelope map[string]interface{}
 
 const maxBytes = 8 * 1_048_576 // 8MB for max readJSON body
 
+func ReadParams(r *http.Request, name string) string {
+	params := httprouter.ParamsFromContext(r.Context())
+	return params.ByName(name)
+}
+
 func ReadIDParam(r *http.Request) (int64, error) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
@@ -25,6 +30,14 @@ func ReadIDParam(r *http.Request) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func WriteStr(w http.ResponseWriter, status int, msg string, headers http.Header) {
+	for k, v := range headers {
+		w.Header()[k] = v
+	}
+	w.WriteHeader(status)
+	w.Write([]byte(msg))
 }
 
 func WriteJSON(w http.ResponseWriter, status int, data Envelope, headers http.Header) {
