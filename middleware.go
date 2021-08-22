@@ -88,7 +88,7 @@ func (ro *Router) rateLimit(next http.Handler) http.Handler {
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			ServerErrResponse(err).ServeHTTP(w, r)
+			ServerErrResponse(err)(w, r)
 			return
 		}
 		mu.Lock()
@@ -101,7 +101,7 @@ func (ro *Router) rateLimit(next http.Handler) http.Handler {
 		clients[ip].lastSeen = time.Now()
 		if !clients[ip].limiter.Allow() {
 			mu.Unlock()
-			RateLimitExceededResponse.ServeHTTP(w, r)
+			RateLimitExceededResponse(w, r)
 			return
 		}
 		mu.Unlock()
@@ -130,7 +130,7 @@ func recoverPanic(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				w.Header().Set("Connection", "close")
-				ServerErrResponse(err).ServeHTTP(w, r)
+				WriteJSON(w, http.StatusInternalServerError, Envelope{"recover": err}, nil)
 				return
 			}
 		}()

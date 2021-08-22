@@ -59,17 +59,17 @@ var MethodNotAllowResponse http.HandlerFunc = func(w http.ResponseWriter, r *htt
 }
 
 func BadRequestResponse(err error) http.HandlerFunc {
-	return errResponse(http.StatusBadRequest, err)
+	return errResponse(http.StatusBadRequest, err.Error())
 }
 
 func FailedValidationResponse(errs map[string]string) http.HandlerFunc {
 	return errResponse(http.StatusBadRequest, errs)
 }
 
-func ServerErrResponse(err interface{}) http.HandlerFunc {
+func ServerErrResponse(err error) http.HandlerFunc {
 	errs := map[string]interface{}{
 		"error":  "the server encountered a problem and could not process your request",
-		"detail": err,
+		"detail": err.Error(),
 	}
 	return errResponse(http.StatusInternalServerError, errs)
 }
