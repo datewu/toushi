@@ -10,7 +10,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func (r *Router) buildIns() []func(http.Handler) http.Handler {
+func (r *router) buildIns() []func(http.Handler) http.Handler {
 	ms := []func(http.Handler) http.Handler{}
 	// note the order is siginificant
 	if r.config.Limiter.Enabled {
@@ -27,7 +27,7 @@ func (r *Router) buildIns() []func(http.Handler) http.Handler {
 	return ms
 }
 
-func (ro *Router) enabledCORS(next http.Handler) http.Handler {
+func (ro *router) enabledCORS(next http.Handler) http.Handler {
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
 
@@ -62,7 +62,7 @@ func (ro *Router) enabledCORS(next http.Handler) http.Handler {
 	}
 	return http.HandlerFunc(middle)
 }
-func (ro *Router) rateLimit(next http.Handler) http.Handler {
+func (ro *router) rateLimit(next http.Handler) http.Handler {
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -110,7 +110,7 @@ func (ro *Router) rateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(middle)
 }
 
-func (ro *Router) metrics(next http.Handler) http.Handler {
+func (ro *router) metrics(next http.Handler) http.Handler {
 	totalRequestReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSend := expvar.NewInt("total_responses_send")
 	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_us")

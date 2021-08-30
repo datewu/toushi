@@ -23,21 +23,21 @@ func DefaultConf() *Config {
 	return cnf
 }
 
-// Router holds all paths relative funcs
-type Router struct {
+// router holds all paths relative funcs
+type router struct {
 	router *httprouter.Router
 	config *Config
 }
 
 // RourerGroup is a group of routes
 type RouterGroup struct {
-	r      *Router
+	r      *router
 	prefix string
 }
 
 // NewGroup return a new routergroup
 func NewGroup(cnf *Config) *RouterGroup {
-	r := Router{
+	r := router{
 		router: httprouter.New(),
 	}
 	if cnf == nil {

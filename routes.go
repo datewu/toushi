@@ -7,13 +7,13 @@ import (
 // Routes return http.Handler for http server
 // should be called after all custum path handler
 // be registed
-func (r *Router) Routes(middlewares ...func(http.Handler) http.Handler) http.Handler {
-	r.router.NotFound = &NotFountResponse
-	r.router.MethodNotAllowed = MethodNotAllowResponse
-	r.router.HandlerFunc(http.MethodGet, "/v1/healthcheck", healthCheckHandler)
+func (g *RouterGroup) Routes(middlewares ...func(http.Handler) http.Handler) http.Handler {
+	g.r.router.NotFound = &NotFountResponse
+	g.r.router.MethodNotAllowed = MethodNotAllowResponse
+	g.Get("/v1/healthcheck", healthCheckHandler)
 
-	middlewares = append(middlewares, r.buildIns()...)
-	h := http.Handler(r.router)
+	middlewares = append(middlewares, g.r.buildIns()...)
+	h := http.Handler(g.r.router)
 	for _, m := range middlewares {
 		h = m(h)
 	}
@@ -30,31 +30,31 @@ func (g *RouterGroup) Group(path string) *RouterGroup {
 }
 
 // NewPath handle new http request
-func (r *Router) NewPath(method, path string, handler http.HandlerFunc) {
-	r.router.HandlerFunc(method, path, handler)
+func (g *RouterGroup) NewPath(method, path string, handler http.HandlerFunc) {
+	g.r.router.HandlerFunc(method, path, handler)
 }
 
 // Get ...
 func (g *RouterGroup) Get(path string, handler http.HandlerFunc) {
-	g.r.NewPath(http.MethodGet, path, handler)
+	g.NewPath(http.MethodGet, path, handler)
 }
 
 // Post ...
 func (g *RouterGroup) Post(path string, handler http.HandlerFunc) {
-	g.r.NewPath(http.MethodPost, path, handler)
+	g.NewPath(http.MethodPost, path, handler)
 }
 
 // Put ...
 func (g *RouterGroup) Put(path string, handler http.HandlerFunc) {
-	g.r.NewPath(http.MethodPut, path, handler)
+	g.NewPath(http.MethodPut, path, handler)
 }
 
 // Patch ...
 func (g *RouterGroup) Patch(path string, handler http.HandlerFunc) {
-	g.r.NewPath(http.MethodPatch, path, handler)
+	g.NewPath(http.MethodPatch, path, handler)
 }
 
 // Delete ...
 func (g *RouterGroup) Delete(path string, handler http.HandlerFunc) {
-	g.r.NewPath(http.MethodDelete, path, handler)
+	g.NewPath(http.MethodDelete, path, handler)
 }
