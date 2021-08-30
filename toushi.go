@@ -29,8 +29,14 @@ type Router struct {
 	config *Config
 }
 
-// New return a new router...
-func New(cnf *Config) *Router {
+// RourerGroup is a group of routes
+type RouterGroup struct {
+	r      *Router
+	prefix string
+}
+
+// NewGroup return a new routergroup
+func NewGroup(cnf *Config) *RouterGroup {
 	r := Router{
 		router: httprouter.New(),
 	}
@@ -38,5 +44,7 @@ func New(cnf *Config) *Router {
 		cnf = DefaultConf()
 	}
 	r.config = cnf
-	return &r
+	return &RouterGroup{
+		r: &r,
+	}
 }
