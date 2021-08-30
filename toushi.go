@@ -1,6 +1,8 @@
 package toushi
 
 import (
+	"errors"
+
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -38,16 +40,23 @@ type RouterGroup struct {
 	middlewares []Middleware
 }
 
-// NewGroup return a new routergroup
-func NewGroup(cnf *Config) *RouterGroup {
+// NewRouterGroup return a new routergroup
+func NewRouterGroup(conf *Config) (*RouterGroup, error) {
+	if conf == nil {
+		return nil, errors.New("no router config provided")
+	}
 	r := router{
 		router: httprouter.New(),
+		config: conf,
 	}
-	if cnf == nil {
-		cnf = DefaultConf()
+	return &RouterGroup{r: &r}, nil
+}
+
+// DefaultRouterGroup return a new routergroup with default config
+func DefaultRouterGroup() *RouterGroup {
+	r := router{
+		router: httprouter.New(),
+		config: DefaultConf(),
 	}
-	r.config = cnf
-	return &RouterGroup{
-		r: &r,
-	}
+	return &RouterGroup{r: &r}
 }
