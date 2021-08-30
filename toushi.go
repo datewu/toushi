@@ -1,6 +1,8 @@
 package toushi
 
-import "github.com/julienschmidt/httprouter"
+import (
+	"github.com/julienschmidt/httprouter"
+)
 
 type Config struct {
 	Limiter struct {
@@ -31,8 +33,9 @@ type router struct {
 
 // RourerGroup is a group of routes
 type RouterGroup struct {
-	r      *router
-	prefix string
+	r           *router
+	prefix      string
+	middlewares []Middleware
 }
 
 // NewGroup return a new routergroup

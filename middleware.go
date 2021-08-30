@@ -10,8 +10,10 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func (r *router) buildIns() []func(http.Handler) http.Handler {
-	ms := []func(http.Handler) http.Handler{}
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
+func (r *router) buildIns() []Middleware {
+	ms := []Middleware{}
 	// note the order is siginificant
 	if r.config.Limiter.Enabled {
 		ms = append(ms, r.rateLimit)
@@ -27,7 +29,7 @@ func (r *router) buildIns() []func(http.Handler) http.Handler {
 	return ms
 }
 
-func (ro *router) enabledCORS(next http.Handler) http.Handler {
+func (ro *router) enabledCORS(next http.HandlerFunc) http.HandlerFunc {
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
 
@@ -58,11 +60,11 @@ func (ro *router) enabledCORS(next http.Handler) http.Handler {
 				}
 			}
 		}
-		next.ServeHTTP(w, r)
+		next(w, r)
 	}
-	return http.HandlerFunc(middle)
+	return middle
 }
-func (ro *router) rateLimit(next http.Handler) http.Handler {
+func (ro *router) rateLimit(next http.HandlerFunc) http.HandlerFunc {
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -105,27 +107,27 @@ func (ro *router) rateLimit(next http.Handler) http.Handler {
 			return
 		}
 		mu.Unlock()
-		next.ServeHTTP(w, r)
+		next(w, r)
 	}
-	return http.HandlerFunc(middle)
+	return middle
 }
 
-func (ro *router) metrics(next http.Handler) http.Handler {
+func (ro *router) metrics(next http.HandlerFunc) http.HandlerFunc {
 	totalRequestReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSend := expvar.NewInt("total_responses_send")
 	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_us")
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		totalRequestReceived.Add(1)
-		next.ServeHTTP(w, r)
+		next(w, r)
 		totalResponsesSend.Add(1)
 		duration := time.Since(start).Microseconds()
 		totalProcessingTimeMicroseconds.Add(duration)
 	}
-	return http.HandlerFunc(middle)
+	return middle
 }
 
-func recoverPanic(next http.Handler) http.Handler {
+func recoverPanic(next http.HandlerFunc) http.HandlerFunc {
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -134,7 +136,7 @@ func recoverPanic(next http.Handler) http.Handler {
 				return
 			}
 		}()
-		next.ServeHTTP(w, r)
+		next(w, r)
 	}
-	return http.HandlerFunc(middle)
+	return middle
 }

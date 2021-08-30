@@ -7,17 +7,18 @@ import (
 // Routes return http.Handler for http server
 // should be called after all custum path handler
 // be registed
-func (g *RouterGroup) Routes(middlewares ...func(http.Handler) http.Handler) http.Handler {
+func (g *RouterGroup) Routes(middlewares ...Middleware) http.Handler {
 	g.r.router.NotFound = &NotFountResponse
 	g.r.router.MethodNotAllowed = MethodNotAllowResponse
 	g.Get("/v1/healthcheck", healthCheckHandler)
 
 	middlewares = append(middlewares, g.r.buildIns()...)
 	h := http.Handler(g.r.router)
+	mm := h.ServeHTTP
 	for _, m := range middlewares {
-		h = m(h)
+		mm = m(mm)
 	}
-	return h
+	return http.HandlerFunc(mm)
 }
 
 // Group add a prefix to all path
@@ -31,6 +32,9 @@ func (g *RouterGroup) Group(path string) *RouterGroup {
 
 // NewPath handle new http request
 func (g *RouterGroup) NewPath(method, path string, handler http.HandlerFunc) {
+	for _, v := range g.middlewares {
+		handler = v(handler)
+	}
 	g.r.router.HandlerFunc(method, path, handler)
 }
 
