@@ -21,17 +21,21 @@ func (g *RouterGroup) Routes(middlewares ...Middleware) http.Handler {
 	return http.HandlerFunc(mm)
 }
 
-// Group add a prefix to all path
-func (g *RouterGroup) Group(path string) *RouterGroup {
+// Group add a prefix to all path, for each Gropu call
+// prefix will accumulate while middleware don't
+func (g *RouterGroup) Group(path string, mds ...Middleware) *RouterGroup {
 	gp := &RouterGroup{
 		r:      g.r,
 		prefix: g.prefix + path,
 	}
+	if mds != nil {
+		gp.middlewares = append(gp.middlewares, mds...)
+	}
 	return gp
 }
 
-// NewPath handle new http request
-func (g *RouterGroup) NewPath(method, path string, handler http.HandlerFunc) {
+// NewHandler handle new http request
+func (g *RouterGroup) NewHandler(method, path string, handler http.HandlerFunc) {
 	for _, v := range g.middlewares {
 		handler = v(handler)
 	}
@@ -40,25 +44,25 @@ func (g *RouterGroup) NewPath(method, path string, handler http.HandlerFunc) {
 
 // Get ...
 func (g *RouterGroup) Get(path string, handler http.HandlerFunc) {
-	g.NewPath(http.MethodGet, path, handler)
+	g.NewHandler(http.MethodGet, path, handler)
 }
 
 // Post ...
 func (g *RouterGroup) Post(path string, handler http.HandlerFunc) {
-	g.NewPath(http.MethodPost, path, handler)
+	g.NewHandler(http.MethodPost, path, handler)
 }
 
 // Put ...
 func (g *RouterGroup) Put(path string, handler http.HandlerFunc) {
-	g.NewPath(http.MethodPut, path, handler)
+	g.NewHandler(http.MethodPut, path, handler)
 }
 
 // Patch ...
 func (g *RouterGroup) Patch(path string, handler http.HandlerFunc) {
-	g.NewPath(http.MethodPatch, path, handler)
+	g.NewHandler(http.MethodPatch, path, handler)
 }
 
 // Delete ...
 func (g *RouterGroup) Delete(path string, handler http.HandlerFunc) {
-	g.NewPath(http.MethodDelete, path, handler)
+	g.NewHandler(http.MethodDelete, path, handler)
 }
