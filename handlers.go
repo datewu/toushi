@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	data := Envelope{
 		"status": "available",
 	}

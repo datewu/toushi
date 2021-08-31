@@ -12,23 +12,6 @@ import (
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
 
-func (r *router) buildIns() []Middleware {
-	ms := []Middleware{}
-	// note the order is siginificant
-	if r.config.Limiter.Enabled {
-		ms = append(ms, r.rateLimit)
-	}
-	if r.config.CORS.TrustedOrigins != nil {
-		ms = append(ms, r.enabledCORS)
-	}
-	ms = append(ms, recoverPanic)
-	if r.config.Metrics {
-		r.router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
-		ms = append(ms, r.metrics)
-	}
-	return ms
-}
-
 func (ro *router) enabledCORS(next http.HandlerFunc) http.HandlerFunc {
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
