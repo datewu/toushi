@@ -15,6 +15,7 @@ import (
 // ErrNoToken is returned when a token is not found in the request
 var ErrNoToken = errors.New("no token")
 
+// GetBearerToken returns the bearer token from the request
 func GetBeareToken(r *http.Request, name string) (string, error) {
 	head, err := GetToken(r, name)
 	if err != nil {
@@ -26,6 +27,7 @@ func GetBeareToken(r *http.Request, name string) (string, error) {
 	return strings.TrimPrefix(head, "Bearer "), nil
 }
 
+// GetToken returns the token from the request
 func GetToken(r *http.Request, name string) (string, error) {
 	if name == "" {
 		name = "token"
@@ -41,6 +43,7 @@ func GetToken(r *http.Request, name string) (string, error) {
 	return token, nil
 }
 
+// ReadQuery returns the string query value with a defaut value from the request
 func ReadQuery(r *http.Request, key string, defaultValue string) string {
 	qs := r.URL.Query()
 	s := qs.Get(key)
@@ -50,6 +53,7 @@ func ReadQuery(r *http.Request, key string, defaultValue string) string {
 	return s
 }
 
+// ReadCSVQuery returns the csv list query value with a defaut list from the request
 func ReadCSVQuery(r *http.Request, key string, defaultValue []string) []string {
 	qs := r.URL.Query()
 	cs := qs.Get(key)
@@ -59,6 +63,7 @@ func ReadCSVQuery(r *http.Request, key string, defaultValue []string) []string {
 	return strings.Split(cs, ",")
 }
 
+// ReadInt64Query returns the int64 query value with a defaut value from the request
 func ReadInt64Query(r *http.Request, key string, defaultValue int64) int64 {
 	qs := r.URL.Query()
 	s := qs.Get(key)
@@ -72,11 +77,13 @@ func ReadInt64Query(r *http.Request, key string, defaultValue int64) int64 {
 	return i
 }
 
+// ReadParam returns the string param value in the request path
 func ReadParams(r *http.Request, name string) string {
 	params := httprouter.ParamsFromContext(r.Context())
 	return params.ByName(name)
 }
 
+// ReadInt64Param returns the int64 param value in the request path
 func ReadInt64Param(r *http.Request, name string) (int64, error) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.ParseInt(params.ByName(name), 10, 64)
@@ -87,6 +94,7 @@ func ReadInt64Param(r *http.Request, name string) (int64, error) {
 	return id, nil
 }
 
+// ReadJSON reads the request body and unmarshal it to the given struct, max size is 8MB
 func ReadJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 	const maxBodySize = 8 * 1_048_576 // 8MB for max readJSON body
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBodySize))
