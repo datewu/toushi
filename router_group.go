@@ -30,27 +30,27 @@ func (g *RouterGroup) NewHandler(method, path string, handler http.HandlerFunc) 
 	g.r.router.HandlerFunc(method, path, handler)
 }
 
-// Get ...
+// Get is a shortcut for NewHandler(http.MethodGet, path, handler)
 func (g *RouterGroup) Get(path string, handler http.HandlerFunc) {
 	g.NewHandler(http.MethodGet, path, handler)
 }
 
-// Post ...
+// Post is a shortcut for NewHandler(http.MethodPost, path, handler)
 func (g *RouterGroup) Post(path string, handler http.HandlerFunc) {
 	g.NewHandler(http.MethodPost, path, handler)
 }
 
-// Put ...
+// Put is a shortcut for NewHandler(http.MethodPut, path, handler)
 func (g *RouterGroup) Put(path string, handler http.HandlerFunc) {
 	g.NewHandler(http.MethodPut, path, handler)
 }
 
-// Patch ...
+// Patch is a shortcut for NewHandler(http.MethodPatch, path, handler)
 func (g *RouterGroup) Patch(path string, handler http.HandlerFunc) {
 	g.NewHandler(http.MethodPatch, path, handler)
 }
 
-// Delete ...
+// Delete is a shortcut for NewHandler(http.MethodDelete, path, handler)
 func (g *RouterGroup) Delete(path string, handler http.HandlerFunc) {
 	g.NewHandler(http.MethodDelete, path, handler)
 }

@@ -10,6 +10,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// Middleware is a function that takes a http.HandlerFunc and returns a http.HandlerFunc.
 type Middleware func(http.HandlerFunc) http.HandlerFunc
 
 func (ro *router) enabledCORS(next http.HandlerFunc) http.HandlerFunc {
