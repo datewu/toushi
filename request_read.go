@@ -6,25 +6,80 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
 
-type Envelope map[string]interface{}
+// ErrNoToken is returned when a token is not found in the request
+var ErrNoToken = errors.New("no token")
 
-const maxBytes = 8 * 1_048_576 // 8MB for max readJSON body
+func GetBeareToken(r *http.Request, name string) (string, error) {
+	head, err := GetToken(r, name)
+	if err != nil {
+		return "", err
+	}
+	if !strings.HasPrefix(head, "Bearer ") {
+		return "", errors.New("token must be a Bearer token")
+	}
+	return strings.TrimPrefix(head, "Bearer "), nil
+}
+
+func GetToken(r *http.Request, name string) (string, error) {
+	if name == "" {
+		name = "token"
+	}
+	q := ReadQuery(r, name, "") // for ws query
+	if q != "" {
+		return q, nil
+	}
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return "", ErrNoToken
+	}
+	return token, nil
+}
+
+func ReadQuery(r *http.Request, key string, defaultValue string) string {
+	qs := r.URL.Query()
+	s := qs.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+	return s
+}
+
+func ReadCSVQuery(r *http.Request, key string, defaultValue []string) []string {
+	qs := r.URL.Query()
+	cs := qs.Get(key)
+	if cs == "" {
+		return defaultValue
+	}
+	return strings.Split(cs, ",")
+}
+
+func ReadInt64Query(r *http.Request, key string, defaultValue int64) int64 {
+	qs := r.URL.Query()
+	s := qs.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+	i, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return defaultValue
+	}
+	return i
+}
 
 func ReadParams(r *http.Request, name string) string {
 	params := httprouter.ParamsFromContext(r.Context())
 	return params.ByName(name)
 }
 
-func ReadIDParam(r *http.Request) (int64, error) {
+func ReadInt64Param(r *http.Request, name string) (int64, error) {
 	params := httprouter.ParamsFromContext(r.Context())
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
+	id, err := strconv.ParseInt(params.ByName(name), 10, 64)
 	if err != nil || id < 1 {
 		return 0, errors.New("invalid id parameter")
 	}
@@ -32,31 +87,9 @@ func ReadIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func WriteStr(w http.ResponseWriter, status int, msg string, headers http.Header) {
-	for k, v := range headers {
-		w.Header()[k] = v
-	}
-	w.WriteHeader(status)
-	w.Write([]byte(msg))
-}
-
-func WriteJSON(w http.ResponseWriter, status int, data Envelope, headers http.Header) {
-	js, err := json.Marshal(data)
-	if err != nil {
-		msg := Envelope{"error": err}
-		WriteJSON(w, http.StatusInternalServerError, msg, nil)
-		return
-	}
-	for k, v := range headers {
-		w.Header()[k] = v
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(js)
-}
-
 func ReadJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
-	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
+	const maxBodySize = 8 * 1_048_576 // 8MB for max readJSON body
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBodySize))
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	err := dec.Decode(dst)
@@ -85,7 +118,7 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 
 			// an open issue at https://github.com/golang/go/issues/30715
 		case err.Error() == "http: request body too large":
-			return fmt.Errorf("body must not be larger than %d bytes", maxBytes)
+			return fmt.Errorf("body must not be larger than %d bytes", maxBodySize)
 
 		case errors.As(err, &invalidUnmarshalErr):
 			panic(err)
@@ -98,32 +131,4 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 		return errors.New("body must only contain a single json value")
 	}
 	return nil
-}
-
-func ReadString(qs url.Values, key string, defaultValue string) string {
-	s := qs.Get(key)
-	if s == "" {
-		return defaultValue
-	}
-	return s
-}
-
-func ReadCSV(qs url.Values, key string, defaultValue []string) []string {
-	cs := qs.Get(key)
-	if cs == "" {
-		return defaultValue
-	}
-	return strings.Split(cs, ",")
-}
-
-func ReadInt(qs url.Values, key string, defaultValue int) int {
-	s := qs.Get(key)
-	if s == "" {
-		return defaultValue
-	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return defaultValue
-	}
-	return i
 }
