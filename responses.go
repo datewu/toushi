@@ -6,12 +6,12 @@ import (
 )
 
 // OKJSON handle 200 respose
-func OKJSON(w http.ResponseWriter, r *http.Request, data interface{}) {
+func OKJSON(w http.ResponseWriter, data interface{}) {
 	WriteJSON(w, http.StatusOK, data, nil)
 }
 
 // OKText handle 200 respose
-func OKText(w http.ResponseWriter, r *http.Request, text string) {
+func OKText(w http.ResponseWriter, text string) {
 	WriteStr(w, http.StatusOK, text, nil)
 }
 
@@ -68,9 +68,14 @@ var HandleMethodNotAllow http.HandlerFunc = func(w http.ResponseWriter, r *http.
 	errResponse(http.StatusMethodNotAllowed, msg)(w, r)
 }
 
-// HandleBadRequest handle 400 response
-func HandleBadRequest(err error) http.HandlerFunc {
-	return errResponse(http.StatusBadRequest, err.Error())
+// HandleBadRequest handle 400 response with custom message
+func HandleBadRequestMsg(msg string) http.HandlerFunc {
+	return errResponse(http.StatusBadRequest, msg)
+}
+
+// HandleBadRequestErr handle 400 response with a error
+func HandleBadRequestErr(err error) http.HandlerFunc {
+	return HandleBadRequestMsg(err.Error())
 }
 
 // HandleFailedValidation handle 400 response
