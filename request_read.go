@@ -1,6 +1,7 @@
 package toushi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -41,6 +42,17 @@ func GetToken(r *http.Request, name string) (string, error) {
 		return "", ErrNoToken
 	}
 	return token, nil
+}
+
+// SetValue sets a value on the request context.
+func SetValue(r *http.Request, key, value interface{}) {
+	ctx := context.WithValue(r.Context(), key, value)
+	_ = r.WithContext(ctx)
+}
+
+// GetValue gets a value from the request context.
+func GetValue(r *http.Request, key interface{}) interface{} {
+	return r.Context().Value(key)
 }
 
 // ReadQuery returns the string query value with a defaut value from the request

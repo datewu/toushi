@@ -6,80 +6,80 @@ import (
 )
 
 // OKJSON handle 200 respose
-func OKJSON(w http.ResponseWriter, r *http.Request, data Envelope) {
+func OKJSON(w http.ResponseWriter, r *http.Request, data interface{}) {
 	WriteJSON(w, http.StatusOK, data, nil)
 }
 
-// ErrResponse handle err respose
-func ErrResponse(w http.ResponseWriter, r *http.Request, status int, msg interface{}) {
-	data := Envelope{"error": msg}
-	WriteJSON(w, status, data, nil)
+// OKText handle 200 respose
+func OKText(w http.ResponseWriter, r *http.Request, text string) {
+	WriteStr(w, http.StatusOK, text, nil)
 }
 
 func errResponse(code int, msg interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ErrResponse(w, r, code, msg)
+		data := Envelope{"error": msg}
+		WriteJSON(w, code, data, nil)
 	}
 }
 
-// NotFoundResponse handle 404 respose
-var NotFountResponse = errResponse(http.StatusNotFound,
+// HandleNotFound handle 404 response
+var HandleNotFound = errResponse(http.StatusNotFound,
 	"the requested resource could not be found",
 )
 
-// EditConflictResponse handle 409 respose
-var EditConflictResponse = errResponse(http.StatusConflict,
+// HandleEditConflict handle 409 response
+var HandleEditConflict = errResponse(http.StatusConflict,
 	"unable to update the record due to an edit conflict, please try later",
 )
 
-// RateLimitExceededResponse handle 429 respose
-var RateLimitExceededResponse = errResponse(http.StatusTooManyRequests,
+// HandleRateLimitExceede handle 429 response
+var HandleRateLimitExceede = errResponse(http.StatusTooManyRequests,
 	"rate limit exceeded",
 )
 
-// InvalidCredentialsResponse handle 400 respose
-var InvalidCredentialsResponse = errResponse(http.StatusBadRequest,
+// HandleInvalidCredentials handle 400 response
+var HandleInvalidCredentials = errResponse(http.StatusBadRequest,
 	"invalid authentication credentials",
 )
 
-// InvalidAuthenticationTokenResponse handle 401 respose
-var InvalidAuthenticationTokenResponse = errResponse(http.StatusUnauthorized,
+// HandleInvalidAuthenticationToken handle 401 response
+var HandleInvalidAuthenticationToken = errResponse(http.StatusUnauthorized,
 	"invalid or missing authentication token",
 )
 
-// AuthenicationRequiredResponse handle 401 respose
-var AuthenticationRequireResponse = errResponse(http.StatusUnauthorized,
+// HandleAuthenticationRequire handle 401 response
+var HandleAuthenticationRequire = errResponse(http.StatusUnauthorized,
 	"you must be authenticated to access this resource",
 )
 
-// InactiveUserResponse handle 403 respose
-var InactiveAccountResponse = errResponse(http.StatusForbidden,
+// HandleInactiveAccount handle 403 response
+var HandleInactiveAccount = errResponse(http.StatusForbidden,
 	"your user account must be activated to access this resource",
 )
 
-// NotPermittedResponse handle 403 respose
-var NotPermittedResponse = errResponse(http.StatusForbidden,
+// HandleNotPermitted handle 403 response
+var HandleNotPermitted = errResponse(http.StatusForbidden,
 	"your user account doesn't have the necessary permissions to access this resource",
 )
 
-// MethodNotAllowedResponse handle 405 respose
-var MethodNotAllowResponse http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+// HandleMethodNotAllow handle 405 response
+var HandleMethodNotAllow http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	msg := fmt.Sprintf("the %s mehtod is not supported for this resource", r.Method)
 	errResponse(http.StatusMethodNotAllowed, msg)(w, r)
 }
 
-// BadRequestResponse handle 400 respose
-func BadRequestResponse(err error) http.HandlerFunc {
+// HandleBadRequest handle 400 response
+func HandleBadRequest(err error) http.HandlerFunc {
 	return errResponse(http.StatusBadRequest, err.Error())
 }
 
-// FailedValidationResponse handle 400 respose
-func FailedValidationResponse(errs map[string]string) http.HandlerFunc {
+// HandleFailedValidation handle 400 response
+func HandleFailedValidation(errs map[string]string) http.HandlerFunc {
 	return errResponse(http.StatusBadRequest, errs)
 }
 
-// ServerErrorResponse handle 500 respose
-func ServerErrResponse(err error) http.HandlerFunc {
+// HandleServerErr handle 500 response
+func HandleServerErr(err error) http.HandlerFunc {
 	errs := map[string]interface{}{
 		"error":  "the server encountered a problem and could not process your request",
 		"detail": err.Error(),

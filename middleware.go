@@ -74,7 +74,7 @@ func (ro *router) rateLimit(next http.HandlerFunc) http.HandlerFunc {
 	middle := func(w http.ResponseWriter, r *http.Request) {
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			ServerErrResponse(err)(w, r)
+			HandleServerErr(err)(w, r)
 			return
 		}
 		mu.Lock()
@@ -87,7 +87,7 @@ func (ro *router) rateLimit(next http.HandlerFunc) http.HandlerFunc {
 		clients[ip].lastSeen = time.Now()
 		if !clients[ip].limiter.Allow() {
 			mu.Unlock()
-			RateLimitExceededResponse(w, r)
+			HandleRateLimitExceede(w, r)
 			return
 		}
 		mu.Unlock()

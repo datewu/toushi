@@ -5,8 +5,8 @@ import "net/http"
 // Routes return http.Handler for http server
 // must be call after add all custum path handler
 func (g *RouterGroup) Routes(middlewares ...Middleware) http.Handler {
-	g.r.router.NotFound = &NotFountResponse
-	g.r.router.MethodNotAllowed = MethodNotAllowResponse
+	g.r.router.NotFound = HandleNotFound
+	g.r.router.MethodNotAllowed = HandleMethodNotAllow
 	g.Get("/v1/healthcheck", HealthCheck)
 
 	middlewares = append(middlewares, g.r.buildIns()...)
