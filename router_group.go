@@ -1,6 +1,9 @@
 package toushi
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 // RouterGroup is a group of routes
 type RouterGroup struct {
@@ -53,4 +56,11 @@ func (g *RouterGroup) Patch(path string, handler http.HandlerFunc) {
 // Delete is a shortcut for NewHandler(http.MethodDelete, path, handler)
 func (g *RouterGroup) Delete(path string, handler http.HandlerFunc) {
 	g.NewHandler(http.MethodDelete, path, handler)
+}
+
+// Static is a shortcut for NewHandler(http.MethodDelete, path, handler)
+func (g *RouterGroup) Static(prefix string, dst string) {
+	path := strings.TrimSuffix(prefix, "/") + "/*filepath"
+	root := http.Dir(dst)
+	g.r.router.ServeFiles(path, root)
 }

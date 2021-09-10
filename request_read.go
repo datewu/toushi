@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -15,6 +17,40 @@ import (
 
 // ErrNoToken is returned when a token is not found in the request
 var ErrNoToken = errors.New("no token")
+
+// FormFile returns the first file for the provided form key.
+func FormFile(r *http.Request, name string) (*multipart.FileHeader, error) {
+	const maxMemory = 32 << 20 // 32 MB
+	if r.MultipartForm == nil {
+		if err := r.ParseMultipartForm(maxMemory); err != nil {
+			return nil, err
+		}
+	}
+	f, fh, err := r.FormFile(name)
+	if err != nil {
+		return nil, err
+	}
+	f.Close()
+	return fh, err
+}
+
+// SaveUploadedFile uploads the form file to specific dst.
+func SaveUploadedFile(file *multipart.FileHeader, dst string) error {
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, src)
+	return err
+}
 
 // GetBearerToken returns the bearer token from the request
 func GetBeareToken(r *http.Request, name string) (string, error) {
