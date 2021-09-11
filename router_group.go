@@ -30,7 +30,7 @@ func (g *RouterGroup) NewHandler(method, path string, handler http.HandlerFunc) 
 	for _, v := range g.middlewares {
 		handler = v(handler)
 	}
-	g.r.router.HandlerFunc(method, path, handler)
+	g.r.router.HandlerFunc(method, g.prefix+path, handler)
 }
 
 // Get is a shortcut for NewHandler(http.MethodGet, path, handler)
