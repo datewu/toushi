@@ -80,10 +80,10 @@ func GetToken(r *http.Request, name string) (string, error) {
 	return token, nil
 }
 
-// SetValue sets a value on the request context.
-func SetValue(r *http.Request, key, value interface{}) {
+// SetValue sets a value on the returned request.
+func SetValue(r *http.Request, key, value interface{}) *http.Request {
 	ctx := context.WithValue(r.Context(), key, value)
-	_ = r.WithContext(ctx)
+	return r.WithContext(ctx)
 }
 
 // GetValue gets a value from the request context.
